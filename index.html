@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudySync – Smart Student Study Planner</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0d1b2a;--navy2:#1a2e45;--navy3:#08101a;
+  --blue:#2563eb;--blue-light:#3b82f6;
+  --purple:#7c3aed;--purple-light:#a78bfa;
+  --cyan:#06b6d4;--green:#22c55e;--red:#ef4444;--amber:#f59e0b;
+  --white:#f8fafc;--gray:#94a3b8;
+  --card-bg:rgba(255,255,255,0.04);--card-border:rgba(255,255,255,0.08);
+  --glow-blue:0 0 40px rgba(37,99,235,0.3);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Outfit',sans-serif;background:var(--navy);color:var(--white);overflow-x:hidden;}
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 10%,rgba(37,99,235,0.15) 0%,transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 80%,rgba(124,58,237,0.12) 0%,transparent 60%),
+    radial-gradient(ellipse 40% 30% at 50% 50%,rgba(6,182,212,0.06) 0%,transparent 60%),
+    var(--navy);
+  pointer-events:none;
+}
+.grid-bg{
+  position:fixed;inset:0;z-index:0;
+  background-image:linear-gradient(rgba(255,255,255,0.015) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px);
+  background-size:60px 60px;pointer-events:none;
+}
+
+/* ═══════════ STARS BG (for login) ═══════════ */
+.stars{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
+.star{position:absolute;background:#fff;border-radius:50%;animation:twinkle var(--d,3s) ease-in-out infinite var(--delay,0s);}
+@keyframes twinkle{0%,100%{opacity:0.1;transform:scale(1);}50%{opacity:0.8;transform:scale(1.3);}}
+
+/* ═══════════ LOGIN SCREEN ═══════════ */
+#login-screen{
+  position:fixed;inset:0;z-index:9999;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--navy3);
+  transition:opacity 0.7s cubic-bezier(0.4,0,0.2,1),transform 0.7s cubic-bezier(0.4,0,0.2,1);
+}
+#login-screen.slide-out{opacity:0;transform:translateY(-30px) scale(0.97);pointer-events:none;}
+
+/* centered card */
+.login-card{
+  position:relative;z-index:1;
+  width:420px;
+  background:rgba(26,46,69,0.85);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:24px;
+  padding:44px 40px 36px;
+  backdrop-filter:blur(24px);
+  box-shadow:0 32px 80px rgba(0,0,0,0.5),0 0 0 1px rgba(255,255,255,0.05) inset;
+  animation:cardIn 0.5s cubic-bezier(0.175,0.885,0.32,1.275) both;
+}
+/* top accent line */
+.login-card::before{
+  content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:60%;height:2px;border-radius:0 0 4px 4px;
+  background:linear-gradient(90deg,var(--blue),var(--purple));
+}
+@keyframes cardIn{from{opacity:0;transform:translateY(24px) scale(0.95);}to{opacity:1;transform:translateY(0) scale(1);}}
+
+/* logo area */
+.lc-logo{text-align:center;margin-bottom:28px;}
+.lc-icon{
+  width:72px;height:72px;border-radius:20px;margin:0 auto 14px;
+  background:linear-gradient(135deg,rgba(37,99,235,0.3),rgba(124,58,237,0.35));
+  border:1px solid rgba(255,255,255,0.12);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 32px rgba(37,99,235,0.35),inset 0 1px 0 rgba(255,255,255,0.1);
+}
+.lc-icon svg{width:42px;height:42px;}
+.lc-brand{font-size:1.9rem;font-weight:900;letter-spacing:-1px;}
+.lc-brand span{color:var(--blue-light);}
+.lc-tag{font-size:0.72rem;letter-spacing:2.5px;text-transform:uppercase;color:var(--gray);font-weight:600;margin-top:4px;}
+
+/* fields */
+.lc-field{margin-bottom:16px;}
+.lc-field label{display:block;font-size:0.78rem;font-weight:700;color:var(--gray);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;}
+.lc-input-wrap{position:relative;}
+.lc-input-wrap input{
+  width:100%;background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.1);border-radius:12px;
+  padding:13px 44px 13px 44px;
+  color:var(--white);font-family:'Outfit',sans-serif;font-size:0.95rem;
+  outline:none;transition:all 0.25s;
+}
+.lc-input-wrap input:focus{
+  border-color:var(--blue);background:rgba(37,99,235,0.08);
+  box-shadow:0 0 0 3px rgba(37,99,235,0.18);
+}
+.lc-input-wrap input::placeholder{color:rgba(148,163,184,0.5);}
+.lc-icon-left{
+  position:absolute;left:14px;top:50%;transform:translateY(-50%);
+  font-size:1rem;opacity:0.5;pointer-events:none;
+}
+.pw-eye{
+  position:absolute;right:14px;top:50%;transform:translateY(-50%);
+  background:none;border:none;color:var(--gray);cursor:pointer;
+  font-size:0.9rem;opacity:0.6;transition:opacity 0.2s;
+}
+.pw-eye:hover{opacity:1;}
+
+/* sign in btn */
+.lc-btn{
+  width:100%;padding:14px;border-radius:12px;border:none;
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  color:#fff;font-family:'Outfit',sans-serif;font-size:1rem;font-weight:700;
+  cursor:pointer;margin-top:8px;
+  transition:all 0.25s;
+  box-shadow:0 4px 24px rgba(37,99,235,0.45);
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  position:relative;overflow:hidden;
+}
+.lc-btn:hover{transform:translateY(-2px);box-shadow:0 8px 36px rgba(37,99,235,0.6);}
+.lc-btn::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent);
+  transform:translateX(-100%);transition:transform 0.5s;
+}
+.lc-btn:hover::after{transform:translateX(100%);}
+.lc-btn:disabled{opacity:0.7;cursor:not-allowed;transform:none;}
+
+.lc-spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;display:none;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.lc-error{
+  display:none;margin-top:12px;padding:10px 14px;
+  background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);
+  border-radius:10px;font-size:0.83rem;color:#f87171;text-align:center;
+}
+.lc-error.show{display:block;animation:shake 0.35s ease;}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}
+
+/* success overlay */
+#lc-success{
+  display:none;position:absolute;inset:0;z-index:20;border-radius:24px;
+  background:rgba(8,16,26,0.96);
+  align-items:center;justify-content:center;flex-direction:column;gap:14px;
+}
+#lc-success.show{display:flex;}
+.sc-ring{
+  width:72px;height:72px;border-radius:50%;
+  background:linear-gradient(135deg,rgba(34,197,94,0.25),rgba(37,99,235,0.2));
+  display:flex;align-items:center;justify-content:center;font-size:2rem;
+  animation:pop 0.4s cubic-bezier(0.175,0.885,0.32,1.275) both;
+}
+@keyframes pop{from{transform:scale(0);}to{transform:scale(1);}}
+.sc-text{font-size:1.1rem;font-weight:800;}
+.sc-sub{font-size:0.85rem;color:var(--gray);}
+
+.lc-footer{text-align:center;margin-top:22px;font-size:0.75rem;color:var(--gray);line-height:1.7;}
+
+/* ═══════════ MAIN SITE ═══════════ */
+#main-site{display:none;opacity:0;transition:opacity 0.6s ease;}
+#main-site.visible{display:block;opacity:1;}
+
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 36px;
+  background:rgba(13,27,42,0.88);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--card-border);
+}
+.nav-logo{display:flex;align-items:center;gap:10px;font-size:1.3rem;font-weight:800;letter-spacing:-0.5px;}
+.nav-logo svg{width:34px;height:34px;}
+.nav-logo span{color:var(--blue-light);}
+.nav-links{display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
+.nav-links a{
+  color:var(--gray);text-decoration:none;font-size:0.85rem;font-weight:500;
+  padding:6px 12px;border-radius:8px;transition:all 0.2s;
+}
+.nav-links a:hover{color:var(--white);background:var(--card-bg);}
+.nav-links a.active{color:var(--white);}
+.nav-cta{background:linear-gradient(135deg,var(--blue),var(--purple)) !important;color:#fff !important;border-radius:8px !important;padding:6px 16px !important;}
+.nav-user-pill{
+  display:flex;align-items:center;gap:7px;
+  background:rgba(37,99,235,0.1);border:1px solid rgba(37,99,235,0.25);
+  border-radius:8px;padding:5px 12px;margin-left:4px;
+}
+.nav-user-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 6px #22c55e;}
+.nav-username{font-size:0.8rem;font-weight:600;color:var(--blue-light);}
+.nav-logout{
+  background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);
+  color:#f87171;padding:5px 12px;border-radius:8px;
+  font-family:'Outfit',sans-serif;font-size:0.8rem;font-weight:600;
+  cursor:pointer;transition:all 0.2s;margin-left:4px;
+}
+.nav-logout:hover{background:rgba(239,68,68,0.22);}
+
+section{position:relative;z-index:1;}
+.container{max-width:1200px;margin:0 auto;padding:0 24px;}
+.pad-section{padding:100px 0;}
+.hidden{display:none !important;}
+
+/* hero */
+#home{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:120px 20px 60px;}
+.hero-content{max-width:760px;}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(37,99,235,0.15);border:1px solid rgba(37,99,235,0.4);
+  border-radius:50px;padding:6px 18px;font-size:0.82rem;font-weight:600;
+  letter-spacing:0.5px;color:var(--blue-light);margin-bottom:28px;
+  animation:fadeUp 0.6s ease both;
+}
+.hero-badge::before{content:'✦';}
+.hero-title{font-size:clamp(2.8rem,6vw,5rem);font-weight:900;line-height:1.08;letter-spacing:-2px;margin-bottom:24px;animation:fadeUp 0.7s ease 0.1s both;}
+.hero-title .grad{background:linear-gradient(135deg,var(--blue-light),var(--purple-light),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hero-sub{font-size:1.1rem;color:var(--gray);line-height:1.7;margin-bottom:36px;animation:fadeUp 0.7s ease 0.2s both;}
+.hero-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;animation:fadeUp 0.7s ease 0.3s both;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px);}to{opacity:1;transform:translateY(0);}}
+
+.btn-primary{background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;border:none;padding:13px 30px;border-radius:12px;font-size:0.97rem;font-weight:600;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 24px rgba(37,99,235,0.35);font-family:'Outfit',sans-serif;}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(37,99,235,0.5);}
+.btn-secondary{background:var(--card-bg);color:var(--white);border:1px solid var(--card-border);padding:13px 30px;border-radius:12px;font-size:0.97rem;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:'Outfit',sans-serif;}
+.btn-secondary:hover{background:rgba(255,255,255,0.08);transform:translateY(-2px);}
+
+/* section headers */
+.section-header{text-align:center;margin-bottom:52px;}
+.section-tag{display:inline-block;font-size:0.73rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--blue-light);margin-bottom:12px;}
+.section-title{font-size:clamp(1.8rem,3.5vw,2.7rem);font-weight:800;letter-spacing:-1px;margin-bottom:14px;}
+.section-sub{color:var(--gray);font-size:0.97rem;max-width:540px;margin:0 auto;}
+
+/* cards */
+.card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:20px;backdrop-filter:blur(12px);transition:all 0.3s;}
+.card:hover{border-color:rgba(37,99,235,0.4);transform:translateY(-4px);box-shadow:var(--glow-blue);}
+
+/* stats */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:18px;margin-bottom:60px;}
+.stat-card{padding:26px;text-align:center;}
+.stat-num{font-size:2.2rem;font-weight:900;letter-spacing:-1px;background:linear-gradient(135deg,var(--blue-light),var(--purple-light));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.stat-label{color:var(--gray);font-size:0.84rem;margin-top:6px;}
+
+/* resources */
+#resources .resources-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;}
+.resource-card{padding:30px;}
+.resource-icon{width:54px;height:54px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:18px;}
+.resource-card h3{font-size:1.15rem;font-weight:700;margin-bottom:8px;}
+.resource-card p{color:var(--gray);font-size:0.88rem;margin-bottom:18px;line-height:1.6;}
+.resource-btns{display:flex;gap:10px;flex-wrap:wrap;}
+.btn-sm{padding:8px 15px;border-radius:8px;font-size:0.81rem;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center;gap:6px;border:none;font-family:'Outfit',sans-serif;}
+.btn-view{background:rgba(37,99,235,0.2);color:var(--blue-light);border:1px solid rgba(37,99,235,0.35);}
+.btn-view:hover{background:rgba(37,99,235,0.35);}
+.btn-dl{background:rgba(124,58,237,0.2);color:var(--purple-light);border:1px solid rgba(124,58,237,0.35);}
+.btn-dl:hover{background:rgba(124,58,237,0.35);}
+
+/* timetable */
+.tt-steps{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:32px;}
+.tt-step-btn{padding:9px 20px;border-radius:10px;border:1px solid var(--card-border);background:var(--card-bg);color:var(--gray);font-family:'Outfit',sans-serif;font-size:0.88rem;font-weight:600;cursor:pointer;transition:all 0.2s;}
+.tt-step-btn.active{background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;border-color:transparent;box-shadow:0 4px 16px rgba(37,99,235,0.4);}
+.tt-step-btn:hover:not(.active){color:var(--white);border-color:rgba(255,255,255,0.2);}
+.tt-meal-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:32px;}
+.tt-meal-btn{padding:8px 18px;border-radius:10px;border:1px solid var(--card-border);background:var(--card-bg);color:var(--gray);font-family:'Outfit',sans-serif;font-size:0.86rem;font-weight:600;cursor:pointer;transition:all 0.2s;}
+.tt-meal-btn.active{background:rgba(6,182,212,0.2);color:var(--cyan);border-color:rgba(6,182,212,0.5);}
+.tt-meal-btn:hover:not(.active){color:var(--white);}
+#meal-display{max-width:680px;margin:0 auto;}
+.meal-header{font-size:1rem;font-weight:700;margin-bottom:18px;text-align:center;color:var(--cyan);}
+.dish-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px;}
+.dish-item{background:rgba(6,182,212,0.07);border:1px solid rgba(6,182,212,0.2);border-radius:12px;padding:14px 16px;font-size:0.88rem;font-weight:500;display:flex;align-items:center;gap:10px;}
+.dish-item .dish-emoji{font-size:1.3rem;}
+#tt-placeholder{text-align:center;color:var(--gray);padding:44px;border:1px dashed var(--card-border);border-radius:16px;}
+
+/* clubs */
+.clubs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:20px;}
+.club-card{padding:26px;text-align:center;cursor:pointer;}
+.club-logo{width:64px;height:64px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:1.9rem;margin:0 auto 16px;transition:transform 0.3s;}
+.club-card:hover .club-logo{transform:scale(1.1) rotate(5deg);}
+.club-card h3{font-size:0.97rem;font-weight:700;margin-bottom:7px;}
+.club-card p{color:var(--gray);font-size:0.81rem;line-height:1.5;}
+.club-tag{display:inline-block;margin-top:10px;padding:3px 10px;border-radius:50px;font-size:0.7rem;font-weight:700;}
+
+/* ═══ ATTENDANCE ═══ */
+.attend-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;}
+.attend-card{padding:24px;}
+.attend-subject{font-size:0.95rem;font-weight:700;margin-bottom:4px;}
+.attend-detail{font-size:0.8rem;color:var(--gray);margin-bottom:14px;}
+.attend-bar-wrap{background:rgba(255,255,255,0.06);border-radius:8px;height:10px;overflow:hidden;margin-bottom:10px;}
+.attend-bar{height:100%;border-radius:8px;transition:width 1s cubic-bezier(0.4,0,0.2,1);}
+.attend-footer{display:flex;justify-content:space-between;align-items:center;}
+.attend-pct{font-size:1.3rem;font-weight:900;letter-spacing:-0.5px;}
+.attend-badge{font-size:0.72rem;font-weight:700;padding:3px 10px;border-radius:50px;}
+.attend-summary{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:16px;
+  background:var(--card-bg);border:1px solid var(--card-border);
+  border-radius:16px;padding:24px;margin-bottom:36px;text-align:center;
+}
+.attend-sum-num{font-size:1.7rem;font-weight:900;}
+.attend-sum-label{font-size:0.78rem;color:var(--gray);margin-top:4px;}
+
+/* ═══ MARKS ═══ */
+.marks-table-wrap{overflow-x:auto;border-radius:16px;border:1px solid var(--card-border);}
+.marks-table{width:100%;border-collapse:collapse;font-size:0.88rem;}
+.marks-table thead tr{background:rgba(37,99,235,0.1);border-bottom:1px solid var(--card-border);}
+.marks-table th{padding:14px 18px;text-align:left;font-size:0.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gray);}
+.marks-table tbody tr{border-bottom:1px solid rgba(255,255,255,0.04);transition:background 0.2s;}
+.marks-table tbody tr:hover{background:rgba(255,255,255,0.03);}
+.marks-table tbody tr:last-child{border-bottom:none;}
+.marks-table td{padding:14px 18px;color:var(--white);}
+.marks-grade{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:34px;height:34px;border-radius:8px;font-weight:800;font-size:0.88rem;
+}
+.marks-bar-mini{height:5px;border-radius:3px;margin-top:6px;}
+.marks-sub-tag{font-size:0.7rem;color:var(--gray);margin-top:2px;}
+.marks-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:36px;}
+.marks-sum-card{padding:22px;text-align:center;}
+.marks-sum-num{font-size:1.8rem;font-weight:900;letter-spacing:-0.5px;}
+.marks-sum-label{font-size:0.78rem;color:var(--gray);margin-top:5px;}
+.cgpa-circle{
+  width:110px;height:110px;border-radius:50%;
+  background:conic-gradient(var(--blue) 0%, var(--purple) calc(var(--pct)*1%),rgba(255,255,255,0.06) 0%);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 12px;position:relative;
+}
+.cgpa-inner{
+  width:82px;height:82px;border-radius:50%;
+  background:var(--navy2);
+  display:flex;align-items:center;justify-content:center;flex-direction:column;
+}
+.cgpa-val{font-size:1.4rem;font-weight:900;letter-spacing:-1px;}
+.cgpa-label{font-size:0.62rem;color:var(--gray);font-weight:600;letter-spacing:0.5px;}
+
+/* ═══ TEAM ═══ */
+.team-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:26px;}
+.team-card{padding:34px 26px;text-align:center;position:relative;overflow:hidden;}
+.team-avatar{width:76px;height:76px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.9rem;margin:0 auto 18px;border:2px solid var(--card-border);}
+.team-name{font-size:1.1rem;font-weight:800;margin-bottom:5px;letter-spacing:-0.3px;}
+.team-role{font-size:0.72rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:4px 14px;border-radius:50px;display:inline-block;margin-bottom:12px;}
+.team-desc{color:var(--gray);font-size:0.83rem;line-height:1.6;}
+.team-socials{display:flex;gap:8px;justify-content:center;margin-top:14px;}
+.team-social-btn{width:32px;height:32px;border-radius:8px;background:var(--card-bg);border:1px solid var(--card-border);display:flex;align-items:center;justify-content:center;font-size:0.82rem;cursor:pointer;transition:all 0.2s;}
+.team-social-btn:hover{background:rgba(37,99,235,0.2);border-color:rgba(37,99,235,0.4);}
+
+/* contact */
+.input-styled{width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--card-border);border-radius:10px;padding:12px 16px;color:var(--white);font-family:'Outfit',sans-serif;font-size:0.93rem;outline:none;transition:border-color 0.2s;}
+.input-styled:focus{border-color:var(--blue);}
+
+/* footer */
+footer{border-top:1px solid var(--card-border);padding:38px 24px;text-align:center;color:var(--gray);font-size:0.83rem;position:relative;z-index:1;}
+footer .footer-logo{font-size:1.15rem;font-weight:800;margin-bottom:10px;}
+footer .footer-logo span{color:var(--blue-light);}
+
+/* modal */
+.modal-overlay{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--navy2);border:1px solid var(--card-border);border-radius:20px;padding:34px;max-width:500px;width:90%;transform:scale(0.95);transition:transform 0.3s;position:relative;}
+.modal-overlay.open .modal{transform:scale(1);}
+.modal-close{position:absolute;top:14px;right:18px;background:none;border:none;color:var(--gray);font-size:1.3rem;cursor:pointer;}
+.modal h2{font-size:1.3rem;font-weight:800;margin-bottom:7px;}
+.modal p{color:var(--gray);font-size:0.88rem;line-height:1.6;margin-bottom:14px;}
+.modal-info{display:flex;flex-direction:column;gap:9px;}
+.modal-info-row{display:flex;align-items:center;gap:9px;font-size:0.86rem;}
+.modal-info-row span{color:var(--gray);}
+
+/* pdf overlay */
+.pdf-embed-overlay{position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.92);display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity 0.3s;}
+.pdf-embed-overlay.open{opacity:1;pointer-events:all;}
+.pdf-bar{display:flex;align-items:center;justify-content:space-between;padding:13px 22px;background:var(--navy2);border-bottom:1px solid var(--card-border);}
+.pdf-bar h3{font-size:0.97rem;font-weight:700;}
+.pdf-bar-btns{display:flex;gap:9px;align-items:center;}
+.pdf-bar button{background:var(--card-bg);border:1px solid var(--card-border);color:var(--white);padding:7px 14px;border-radius:8px;font-family:'Outfit',sans-serif;font-size:0.83rem;cursor:pointer;}
+.pdf-bar button:hover{background:rgba(255,255,255,0.1);}
+.pdf-embed-overlay iframe{flex:1;border:none;}
+
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:var(--navy);}
+::-webkit-scrollbar-thumb{background:var(--navy2);border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+
+<!-- ═══════════════ STARS (login bg) ═══════════════ -->
+<div class="stars" id="stars-bg"></div>
+
+<!-- ═══════════════════════════════════════════
+     LOGIN SCREEN — clean centered card
+═══════════════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-card">
+
+    <!-- success overlay -->
+    <div id="lc-success">
+      <div class="sc-ring">✓</div>
+      <div class="sc-text">Login Successful!</div>
+      <div class="sc-sub" id="sc-welcome">Welcome back!</div>
+    </div>
+
+    <!-- logo -->
+    <div class="lc-logo">
+      <div class="lc-icon">
+        <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="3" y="26" width="50" height="27" rx="4" fill="#1e40af" opacity="0.7"/>
+          <rect x="7" y="23" width="42" height="3" rx="1.5" fill="#3b82f6"/>
+          <rect x="11" y="6" width="26" height="30" rx="4" fill="#2563eb"/>
+          <rect x="9" y="3" width="6" height="6" rx="1.5" fill="#1d4ed8"/>
+          <rect x="21" y="3" width="6" height="6" rx="1.5" fill="#1d4ed8"/>
+          <rect x="14" y="14" width="7" height="7" rx="1.5" fill="rgba(255,255,255,0.3)"/>
+          <rect x="24" y="14" width="7" height="7" rx="1.5" fill="#7c3aed"/>
+          <rect x="14" y="24" width="7" height="7" rx="1.5" fill="#6d28d9"/>
+          <rect x="24" y="24" width="7" height="7" rx="1.5" fill="rgba(255,255,255,0.2)"/>
+          <path d="M17 17.5l3 3 4.5-4.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="43" cy="22" r="10" fill="#7c3aed" opacity="0.9"/>
+          <path d="M43 13Q49 16 49 22Q49 28 43 31Q37 28 37 22Q37 16 43 13Z" fill="#a78bfa" opacity="0.5"/>
+          <rect x="40" y="31" width="6" height="3" rx="1.5" fill="#6d28d9"/>
+          <rect x="41.5" y="34" width="3" height="2.5" rx="0.75" fill="#5b21b6"/>
+        </svg>
+      </div>
+      <div class="lc-brand">Study<span>Sync</span></div>
+      <div class="lc-tag">Smart Student Study Planner</div>
+    </div>
+
+    <!-- USERNAME -->
+    <div class="lc-field">
+      <label for="l-user">Username</label>
+      <div class="lc-input-wrap">
+        <span class="lc-icon-left">👤</span>
+        <input type="text" id="l-user" placeholder="Enter your username" autocomplete="username" />
+      </div>
+    </div>
+
+    <!-- PASSWORD -->
+    <div class="lc-field">
+      <label for="l-pass">Password</label>
+      <div class="lc-input-wrap">
+        <span class="lc-icon-left">🔒</span>
+        <input type="password" id="l-pass" placeholder="Enter your password" autocomplete="current-password" />
+        <button class="pw-eye" onclick="togglePw()" id="pw-eye-btn">👁</button>
+      </div>
+    </div>
+
+    <!-- SIGN IN -->
+    <button class="lc-btn" id="login-btn" onclick="doLogin()">
+      <span id="btn-label">Sign In</span>
+      <span id="btn-arrow">→</span>
+      <div class="lc-spinner" id="lc-spinner"></div>
+    </button>
+
+    <div class="lc-error" id="lc-error">❌ Invalid username or password.</div>
+
+    <div class="lc-footer">
+      SRM Nagar, Kattankulathur – 603 203<br>
+      Chengalpattu District, Tamil Nadu
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     MAIN SITE
+═══════════════════════════════════════════ -->
+<div id="main-site">
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="2" y="18" width="36" height="20" rx="3" fill="#1e40af" opacity="0.7"/>
+      <rect x="5" y="16" width="30" height="2" rx="1" fill="#3b82f6"/>
+      <rect x="8" y="4" width="18" height="22" rx="3" fill="#2563eb"/>
+      <rect x="6" y="2" width="4" height="4" rx="1" fill="#1d4ed8"/>
+      <rect x="14" y="2" width="4" height="4" rx="1" fill="#1d4ed8"/>
+      <rect x="10" y="10" width="5" height="5" rx="1" fill="rgba(255,255,255,0.3)"/>
+      <rect x="17" y="10" width="5" height="5" rx="1" fill="#7c3aed"/>
+      <rect x="10" y="17" width="5" height="5" rx="1" fill="#6d28d9"/>
+      <rect x="17" y="17" width="5" height="5" rx="1" fill="rgba(255,255,255,0.2)"/>
+      <path d="M12 11.5l2 2 3-3" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
+      <circle cx="30" cy="16" r="7" fill="#7c3aed" opacity="0.85"/>
+      <path d="M30 10 Q34 12 34 16 Q34 20 30 22 Q26 20 26 16 Q26 12 30 10Z" fill="#a78bfa" opacity="0.5"/>
+      <rect x="28" y="22" width="4" height="2" rx="1" fill="#6d28d9"/>
+      <rect x="29" y="24" width="2" height="2" rx="0.5" fill="#5b21b6"/>
+    </svg>
+    Study<span>Sync</span>
+  </div>
+  <div class="nav-links">
+    <a href="#home" class="active">Home</a>
+    <a href="#resources">Resources</a>
+    <a href="#timetable">Canteen</a>
+    <a href="#clubs">Clubs</a>
+    <a href="#attendance">Attendance</a>
+    <a href="#marks">Marks</a>
+    <a href="#team">Team</a>
+    <a href="#contact" class="nav-cta">Contact</a>
+    <div class="nav-user-pill"><div class="nav-user-dot"></div><span class="nav-username" id="nav-username">—</span></div>
+    <button class="nav-logout" onclick="doLogout()">↩ Logout</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="home">
+  <div class="hero-content">
+    <div class="hero-badge">SRM Institute of Science and Technology</div>
+    <h1 class="hero-title">Your Smart<br><span class="grad">Campus Companion</span></h1>
+    <p class="hero-sub">Resources, canteen schedules, clubs, attendance and marks — everything a student needs, beautifully in one place.</p>
+    <div class="hero-btns">
+      <button class="btn-primary" onclick="scrollSec('resources')">📚 Browse Resources</button>
+      <button class="btn-secondary" onclick="scrollSec('timetable')">🍽️ Canteen Menu</button>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="pad-section" style="padding-top:0;">
+  <div class="container">
+    <div class="stats-row">
+      <div class="card stat-card"><div class="stat-num">3+</div><div class="stat-label">Study Resources</div></div>
+      <div class="card stat-card"><div class="stat-num">7</div><div class="stat-label">Days of Canteen Menu</div></div>
+      <div class="card stat-card"><div class="stat-num">8</div><div class="stat-label">Active Clubs</div></div>
+      <div class="card stat-card"><div class="stat-num">24/7</div><div class="stat-label">Always Available</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- RESOURCES -->
+<section id="resources" class="pad-section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">📁 Study Materials</div>
+      <h2 class="section-title">Academic Resources</h2>
+      <p class="section-sub">Download or view your subject materials — Maths, OOPS, and Physics previous year papers.</p>
+    </div>
+    <div class="resources-grid">
+      <div class="card resource-card">
+        <div class="resource-icon" style="background:rgba(37,99,235,0.15);">📐</div>
+        <h3>Advanced Calculus &amp; Complex Analysis</h3>
+        <p>B.Tech / M.Tech — May 2024 | 21MAB102T | Second Semester</p>
+        <div style="margin-bottom:14px;"><span style="font-size:0.72rem;color:var(--gray);font-family:'Space Mono',monospace;">Multiple Integrals · Vector Calculus · Laplace Transforms · Complex Analysis</span></div>
+        <div class="resource-btns">
+          <button class="btn-sm btn-view" onclick="openPDF('maths.pdf','Advanced Calculus – May 2024')">👁 View</button>
+          <a class="btn-sm btn-dl" href="maths.pdf" download>⬇ Download</a>
+        </div>
+      </div>
+      <div class="card resource-card">
+        <div class="resource-icon" style="background:rgba(124,58,237,0.15);">💻</div>
+        <h3>Object Oriented Design &amp; Programming</h3>
+        <p>B.Tech / M.Tech — May 2023 | 21CSC101T | Second &amp; Third Semester</p>
+        <div style="margin-bottom:14px;"><span style="font-size:0.72rem;color:var(--gray);font-family:'Space Mono',monospace;">OOP Concepts · STL · Templates · UML Diagrams · Exception Handling</span></div>
+        <div class="resource-btns">
+          <button class="btn-sm btn-view" onclick="openPDF('oops.pdf','OOPS – May 2023')">👁 View</button>
+          <a class="btn-sm btn-dl" href="oops.pdf" download>⬇ Download</a>
+        </div>
+      </div>
+      <div class="card resource-card">
+        <div class="resource-icon" style="background:rgba(6,182,212,0.15);">⚛️</div>
+        <h3>Semiconductor Physics &amp; Computational Methods</h3>
+        <p>B.Tech — November 2024 | 21PYB102J | First &amp; Second Semester</p>
+        <div style="margin-bottom:14px;"><span style="font-size:0.72rem;color:var(--gray);font-family:'Space Mono',monospace;">Semiconductors · Band Theory · Optoelectronics · Nanomaterials · Hall Effect</span></div>
+        <div class="resource-btns">
+          <button class="btn-sm btn-view" onclick="openPDF('physics.pdf','Physics – Nov 2024')">👁 View</button>
+          <a class="btn-sm btn-dl" href="physics.pdf" download>⬇ Download</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CANTEEN -->
+<section id="timetable" class="pad-section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">🍽️ Canteen</div>
+      <h2 class="section-title">Canteen Timetable</h2>
+      <p class="section-sub">Select a day, then choose a meal time to see what's being served.</p>
+    </div>
+    <div style="text-align:center;margin-bottom:12px;"><p style="color:var(--gray);font-size:0.82rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;">Step 1 — Choose a Day</p></div>
+    <div class="tt-steps">
+      <button class="tt-step-btn" onclick="selectDay('Monday',this)">Mon</button>
+      <button class="tt-step-btn" onclick="selectDay('Tuesday',this)">Tue</button>
+      <button class="tt-step-btn" onclick="selectDay('Wednesday',this)">Wed</button>
+      <button class="tt-step-btn" onclick="selectDay('Thursday',this)">Thu</button>
+      <button class="tt-step-btn" onclick="selectDay('Friday',this)">Fri</button>
+      <button class="tt-step-btn" onclick="selectDay('Saturday',this)">Sat</button>
+      <button class="tt-step-btn" onclick="selectDay('Sunday',this)">Sun</button>
+    </div>
+    <div id="meal-step" class="hidden">
+      <div style="text-align:center;margin-bottom:12px;"><p style="color:var(--gray);font-size:0.82rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;">Step 2 — Choose Meal Time</p></div>
+      <div class="tt-meal-row">
+        <button class="tt-meal-btn" onclick="selectMeal('breakfast',this)">🌅 Breakfast</button>
+        <button class="tt-meal-btn" onclick="selectMeal('lunch',this)">☀️ Lunch</button>
+        <button class="tt-meal-btn" onclick="selectMeal('snacks',this)">🍵 Snacks</button>
+        <button class="tt-meal-btn" onclick="selectMeal('supper',this)">🌙 Supper</button>
+      </div>
+    </div>
+    <div id="meal-display">
+      <div id="tt-placeholder"><div style="font-size:2.2rem;margin-bottom:10px;">🍽️</div><p>Select a day and meal to see the menu</p></div>
+      <div id="meal-content" class="hidden">
+        <div class="meal-header" id="meal-header-text"></div>
+        <div class="dish-list" id="dish-list"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CLUBS -->
+<section id="clubs" class="pad-section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">🏆 Campus Life</div>
+      <h2 class="section-title">Student Clubs</h2>
+      <p class="section-sub">Join a club that matches your passion. Click any club to learn more.</p>
+    </div>
+    <div class="clubs-grid" id="clubs-grid"></div>
+  </div>
+</section>
+
+<!-- ATTENDANCE -->
+<section id="attendance" class="pad-section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">📋 Your Record</div>
+      <h2 class="section-title">Attendance</h2>
+      <p class="section-sub">Your subject-wise attendance for the current semester.</p>
+    </div>
+    <div class="attend-summary card" id="attend-summary"></div>
+    <div class="attend-grid" id="attend-grid"></div>
+  </div>
+</section>
+
+<!-- MARKS -->
+<section id="marks" class="pad-section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">📊 Your Scores</div>
+      <h2 class="section-title">Marks &amp; Grades</h2>
+      <p class="section-sub">Your internal assessment and exam scores for the current semester.</p>
+    </div>
+    <div class="marks-summary" id="marks-summary"></div>
+    <div class="marks-table-wrap">
+      <table class="marks-table">
+        <thead>
+          <tr>
+            <th>Subject</th>
+            <th>Internal 1</th>
+            <th>Internal 2</th>
+            <th>Assignment</th>
+            <th>Total (50)</th>
+            <th>Grade</th>
+          </tr>
+        </thead>
+        <tbody id="marks-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- TEAM -->
+<section id="team" class="pad-section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">👥 The Makers</div>
+      <h2 class="section-title">Meet Our Team</h2>
+      <p class="section-sub">The talented individuals who designed and built StudySync for the SRM community.</p>
+    </div>
+    <div class="team-grid">
+      <div class="card team-card">
+        <div class="team-avatar" style="background:rgba(37,99,235,0.15);">👨‍💻</div>
+        <div class="team-name">Himasai Gandham</div>
+        <div class="team-role" style="background:rgba(37,99,235,0.15);color:var(--blue-light);">Backend Developer</div>
+        <div class="team-desc">Architected the server-side logic, API endpoints, database design, and authentication system powering StudySync.</div>
+        <div class="team-socials">
+          <span class="team-social-btn">🐙</span>
+          <span class="team-social-btn">💼</span>
+          <span class="team-social-btn">✉️</span>
+        </div>
+      </div>
+      <div class="card team-card">
+        <div class="team-avatar" style="background:rgba(236,72,153,0.15);">👩‍🎨</div>
+        <div class="team-name">Charishma</div>
+        <div class="team-role" style="background:rgba(236,72,153,0.15);color:#f472b6;">UML Designer</div>
+        <div class="team-desc">Crafted complete system architecture, UML diagrams, use-case models, and design documentation for StudySync.</div>
+        <div class="team-socials">
+          <span class="team-social-btn">🎨</span>
+          <span class="team-social-btn">💼</span>
+          <span class="team-social-btn">✉️</span>
+        </div>
+      </div>
+      <div class="card team-card">
+        <div class="team-avatar" style="background:rgba(124,58,237,0.15);">👩‍💻</div>
+        <div class="team-name">Akshara Sinha</div>
+        <div class="team-role" style="background:rgba(124,58,237,0.15);color:var(--purple-light);">Co-Developer</div>
+        <div class="team-desc">Collaborated on frontend development, feature integration, testing, and ensuring a seamless student experience.</div>
+        <div class="team-socials">
+          <span class="team-social-btn">🐙</span>
+          <span class="team-social-btn">💼</span>
+          <span class="team-social-btn">✉️</span>
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:48px;">
+      <div style="display:inline-flex;align-items:center;gap:12px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:50px;padding:11px 26px;">
+        <span style="font-size:1rem;">⚡</span>
+        <span style="font-size:0.83rem;color:var(--gray);">Built with passion at <strong style="color:var(--white);">SRM Institute of Science and Technology</strong></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact" class="pad-section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">📬 Contact</div>
+      <h2 class="section-title">Get in Touch</h2>
+      <p class="section-sub">Have questions or want to add content? Reach us below.</p>
+    </div>
+    <div style="max-width:490px;margin:0 auto;">
+      <div class="card" style="padding:34px;">
+        <div style="display:flex;flex-direction:column;gap:15px;">
+          <input id="c-name" class="input-styled" placeholder="Your Name" />
+          <input id="c-email" class="input-styled" placeholder="Email Address" type="email" />
+          <textarea id="c-msg" class="input-styled" placeholder="Your message…" rows="4" style="resize:vertical;"></textarea>
+          <button class="btn-primary" onclick="sendMsg()" style="width:100%;">Send Message ✉️</button>
+          <div id="c-success" class="hidden" style="text-align:center;color:#4ade80;font-weight:600;">✅ Message sent! We'll get back to you soon.</div>
+        </div>
+      </div>
+      <div style="margin-top:24px;display:flex;flex-direction:column;gap:10px;">
+        <div class="card" style="padding:15px 20px;display:flex;align-items:center;gap:13px;">
+          <span style="font-size:1.3rem;">📍</span>
+          <div><div style="font-weight:600;font-size:0.88rem;">Address</div><div style="color:var(--gray);font-size:0.82rem;">SRM Nagar, Kattankulathur – 603 203, Chengalpattu District, Tamil Nadu</div></div>
+        </div>
+        <div class="card" style="padding:15px 20px;display:flex;align-items:center;gap:13px;">
+          <span style="font-size:1.3rem;">✉️</span>
+          <div><div style="font-weight:600;font-size:0.88rem;">Email</div><div style="color:var(--gray);font-size:0.82rem;">studysync@srmist.edu.in</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Study<span>Sync</span></div>
+  <p>Smart Student Study Planner — SRM Institute of Science and Technology</p>
+  <p style="margin-top:5px;font-size:0.76rem;">SRM Nagar, Kattankulathur – 603 203 · Chengalpattu District, Tamil Nadu</p>
+  <p style="margin-top:9px;font-size:0.74rem;">Built with ❤️ by <strong style="color:var(--blue-light);">Himasai Gandham</strong> · <strong style="color:#f472b6;">Charishma</strong> · <strong style="color:var(--purple-light);">Akshara Sinha</strong></p>
+  <p style="margin-top:7px;font-size:0.74rem;">© 2026 StudySync. All rights reserved.</p>
+</footer>
+
+<!-- CLUB MODAL -->
+<div class="modal-overlay" id="club-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div style="font-size:2.3rem;margin-bottom:14px;" id="modal-emoji"></div>
+    <h2 id="modal-title"></h2>
+    <p id="modal-desc"></p>
+    <div class="modal-info" id="modal-info"></div>
+  </div>
+</div>
+
+<!-- PDF OVERLAY -->
+<div class="pdf-embed-overlay" id="pdf-overlay">
+  <div class="pdf-bar">
+    <h3 id="pdf-title">Document</h3>
+    <div class="pdf-bar-btns">
+      <a id="pdf-dl-btn" href="#" download style="text-decoration:none;"><button>⬇ Download</button></a>
+      <button onclick="closePDF()">✕ Close</button>
+    </div>
+  </div>
+  <iframe id="pdf-frame" src=""></iframe>
+</div>
+
+</div><!-- /main-site -->
+
+<script>
+/* ═══════════════════════════════════════════════════
+   ██████╗  █████╗  ██████╗██╗  ██╗███████╗███╗   ██╗██████╗
+   ██╔══██╗██╔══██╗██╔════╝██║ ██╔╝██╔════╝████╗  ██║██╔══██╗
+   ██████╔╝███████║██║     █████╔╝ █████╗  ██╔██╗ ██║██║  ██║
+   ██╔══██╗██╔══██║██║     ██╔═██╗ ██╔══╝  ██║╚██╗██║██║  ██║
+   ██████╔╝██║  ██║╚██████╗██║  ██╗███████╗██║ ╚████║██████╔╝
+   ╚═════╝ ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═══╝╚═════╝
+   ALL DATA LIVES HERE — simulate server-side in production
+═══════════════════════════════════════════════════ */
+
+/* ─── USER CREDENTIALS ─── */
+const USERS = {
+  'himasai':   { password:'himasai2026',  name:'Himasai Gandham', role:'developer', reg:'RA2311003010350' },
+  'charishma': { password:'charishma26',  name:'Charishma',       role:'designer',  reg:'RA2311003010351' },
+  'akshara':   { password:'akshara2026',  name:'Akshara Sinha',   role:'developer', reg:'RA2311003010352' },
+  'student':   { password:'student123',   name:'Student Demo',    role:'student',   reg:'RA2311003010001' },
+  'admin':     { password:'admin2026',    name:'Administrator',   role:'admin',     reg:'ADMIN001'        },
+  'faculty':   { password:'faculty@srm',  name:'Faculty Member',  role:'faculty',   reg:'FAC2024001'      },
+};
+
+/* ─── ATTENDANCE DATA (per user) ─── */
+const ATTENDANCE_DATA = {
+  himasai: {
+    overall: { conducted:85, attended:78, percentage:91.8 },
+    subjects: [
+      { name:'Advanced Calculus & Complex Analysis', code:'21MAB102T', conducted:28, attended:26, pct:92.8 },
+      { name:'Object Oriented Design & Programming', code:'21CSC101T', conducted:30, attended:28, pct:93.3 },
+      { name:'Semiconductor Physics',               code:'21PYB102J', conducted:27, attended:24, pct:88.9 },
+    ]
+  },
+  charishma: {
+    overall: { conducted:85, attended:72, percentage:84.7 },
+    subjects: [
+      { name:'Advanced Calculus & Complex Analysis', code:'21MAB102T', conducted:28, attended:23, pct:82.1 },
+      { name:'Object Oriented Design & Programming', code:'21CSC101T', conducted:30, attended:26, pct:86.7 },
+      { name:'Semiconductor Physics',               code:'21PYB102J', conducted:27, attended:23, pct:85.2 },
+    ]
+  },
+  akshara: {
+    overall: { conducted:85, attended:80, percentage:94.1 },
+    subjects: [
+      { name:'Advanced Calculus & Complex Analysis', code:'21MAB102T', conducted:28, attended:27, pct:96.4 },
+      { name:'Object Oriented Design & Programming', code:'21CSC101T', conducted:30, attended:28, pct:93.3 },
+      { name:'Semiconductor Physics',               code:'21PYB102J', conducted:27, attended:25, pct:92.6 },
+    ]
+  },
+  student: {
+    overall: { conducted:85, attended:68, percentage:80.0 },
+    subjects: [
+      { name:'Advanced Calculus & Complex Analysis', code:'21MAB102T', conducted:28, attended:22, pct:78.6 },
+      { name:'Object Oriented Design & Programming', code:'21CSC101T', conducted:30, attended:24, pct:80.0 },
+      { name:'Semiconductor Physics',               code:'21PYB102J', conducted:27, attended:22, pct:81.5 },
+    ]
+  },
+  admin: {
+    overall: { conducted:0, attended:0, percentage:0 },
+    subjects: []
+  },
+  faculty: {
+    overall: { conducted:0, attended:0, percentage:0 },
+    subjects: []
+  }
+};
+
+/* ─── MARKS DATA (per user) ─── */
+const MARKS_DATA = {
+  himasai: {
+    cgpa: 9.1,
+    subjects: [
+      { name:'Advanced Calculus', code:'21MAB102T', i1:18, i2:19, assign:9,  total:46, grade:'O'  },
+      { name:'OOP & Design',      code:'21CSC101T', i1:17, i2:18, assign:10, total:45, grade:'O'  },
+      { name:'Semiconductor Phy', code:'21PYB102J', i1:16, i2:17, assign:8,  total:41, grade:'A+' },
+    ]
+  },
+  charishma: {
+    cgpa: 8.6,
+    subjects: [
+      { name:'Advanced Calculus', code:'21MAB102T', i1:15, i2:16, assign:8,  total:39, grade:'A+' },
+      { name:'OOP & Design',      code:'21CSC101T', i1:17, i2:18, assign:9,  total:44, grade:'O'  },
+      { name:'Semiconductor Phy', code:'21PYB102J', i1:14, i2:15, assign:8,  total:37, grade:'A'  },
+    ]
+  },
+  akshara: {
+    cgpa: 9.4,
+    subjects: [
+      { name:'Advanced Calculus', code:'21MAB102T', i1:19, i2:20, assign:10, total:49, grade:'O'  },
+      { name:'OOP & Design',      code:'21CSC101T', i1:18, i2:19, assign:9,  total:46, grade:'O'  },
+      { name:'Semiconductor Phy', code:'21PYB102J', i1:17, i2:18, assign:9,  total:44, grade:'O'  },
+    ]
+  },
+  student: {
+    cgpa: 7.8,
+    subjects: [
+      { name:'Advanced Calculus', code:'21MAB102T', i1:13, i2:14, assign:7,  total:34, grade:'B+' },
+      { name:'OOP & Design',      code:'21CSC101T', i1:14, i2:15, assign:8,  total:37, grade:'A'  },
+      { name:'Semiconductor Phy', code:'21PYB102J', i1:12, i2:13, assign:7,  total:32, grade:'B'  },
+    ]
+  },
+  admin:   { cgpa: 0, subjects: [] },
+  faculty: { cgpa: 0, subjects: [] },
+};
+
+/* ─── CANTEEN MENU ─── */
+const menu={
+  Monday:{
+    breakfast:[{emoji:'🥣',name:'Idli Sambar'},{emoji:'🫓',name:'Bread Omelette'},{emoji:'☕',name:'Tea / Coffee'},{emoji:'🍌',name:'Banana'}],
+    lunch:    [{emoji:'🍚',name:'Rice'},{emoji:'🍲',name:'Sambar'},{emoji:'🥗',name:'Rasam'},{emoji:'🧆',name:'Dal Fry'},{emoji:'🥬',name:'Poriyal'},{emoji:'🍮',name:'Curd'}],
+    snacks:   [{emoji:'🥪',name:'Bread Upma'},{emoji:'🫖',name:'Ginger Tea'},{emoji:'🍪',name:'Biscuits'}],
+    supper:   [{emoji:'🍞',name:'Chapati'},{emoji:'🍛',name:'Paneer Curry'},{emoji:'🥗',name:'Salad'},{emoji:'🍵',name:'Soup'}]
+  },
+  Tuesday:{
+    breakfast:[{emoji:'🧇',name:'Dosa'},{emoji:'🫙',name:'Chutney'},{emoji:'☕',name:'Tea / Coffee'},{emoji:'🍊',name:'Fruit'}],
+    lunch:    [{emoji:'🍚',name:'Rice'},{emoji:'🍲',name:'Rasam'},{emoji:'🧆',name:'Chana Masala'},{emoji:'🥬',name:'Kootu'},{emoji:'🍮',name:'Curd'}],
+    snacks:   [{emoji:'🥜',name:'Groundnut Chaat'},{emoji:'🫖',name:'Tea'},{emoji:'🍞',name:'Bread Pakoda'}],
+    supper:   [{emoji:'🍞',name:'Phulka'},{emoji:'🍛',name:'Dal Tadka'},{emoji:'🥗',name:'Cucumber Salad'},{emoji:'🍵',name:'Milk'}]
+  },
+  Wednesday:{
+    breakfast:[{emoji:'🫔',name:'Pongal'},{emoji:'🫙',name:'Sambar'},{emoji:'☕',name:'Coffee'},{emoji:'🍎',name:'Apple'}],
+    lunch:    [{emoji:'🍚',name:'Rice'},{emoji:'🍲',name:'Sambar'},{emoji:'🥗',name:'Rasam'},{emoji:'🥬',name:'Curry'},{emoji:'🍮',name:'Buttermilk'}],
+    snacks:   [{emoji:'🍩',name:'Vada'},{emoji:'🫙',name:'Chutney'},{emoji:'🫖',name:'Tea'}],
+    supper:   [{emoji:'🍞',name:'Chapati'},{emoji:'🍛',name:'Egg Curry'},{emoji:'🥗',name:'Salad'},{emoji:'🍵',name:'Soup'}]
+  },
+  Thursday:{
+    breakfast:[{emoji:'🫓',name:'Paratha'},{emoji:'🧈',name:'Butter'},{emoji:'☕',name:'Tea'},{emoji:'🍌',name:'Banana'}],
+    lunch:    [{emoji:'🍛',name:'Biryani'},{emoji:'🥗',name:'Raita'},{emoji:'🍮',name:'Curd'},{emoji:'🧆',name:'Salan'}],
+    snacks:   [{emoji:'🍫',name:'Cake'},{emoji:'🫖',name:'Coffee'},{emoji:'🥐',name:'Bun'}],
+    supper:   [{emoji:'🍞',name:'Roti'},{emoji:'🍛',name:'Vegetable Kurma'},{emoji:'🥗',name:'Salad'},{emoji:'🍵',name:'Hot Milk'}]
+  },
+  Friday:{
+    breakfast:[{emoji:'🥞',name:'Uttapam'},{emoji:'🫙',name:'Chutney'},{emoji:'☕',name:'Coffee'},{emoji:'🍊',name:'Orange'}],
+    lunch:    [{emoji:'🍚',name:'Rice'},{emoji:'🥗',name:'Sambar'},{emoji:'🍲',name:'Rasam'},{emoji:'🥬',name:'Beans Poriyal'},{emoji:'🍮',name:'Curd'}],
+    snacks:   [{emoji:'🧁',name:'Samosa'},{emoji:'🫖',name:'Tea'},{emoji:'🍞',name:'Bread'}],
+    supper:   [{emoji:'🍞',name:'Chapati'},{emoji:'🍛',name:'Mushroom Masala'},{emoji:'🥗',name:'Salad'},{emoji:'🍵',name:'Soup'}]
+  },
+  Saturday:{
+    breakfast:[{emoji:'🍳',name:'Egg Bhurji'},{emoji:'🫓',name:'Toast'},{emoji:'☕',name:'Tea'},{emoji:'🍌',name:'Fruit'}],
+    lunch:    [{emoji:'🍛',name:'Special Fried Rice'},{emoji:'🍲',name:'Manchurian'},{emoji:'🥗',name:'Noodles'},{emoji:'🍮',name:'Ice Cream'}],
+    snacks:   [{emoji:'🍕',name:'Pizza Slice'},{emoji:'🥤',name:'Juice'},{emoji:'🍪',name:'Cookie'}],
+    supper:   [{emoji:'🍞',name:'Paratha'},{emoji:'🍛',name:'Shahi Paneer'},{emoji:'🥗',name:'Salad'},{emoji:'🥛',name:'Lassi'}]
+  },
+  Sunday:{
+    breakfast:[{emoji:'🥞',name:'Pancakes'},{emoji:'🍯',name:'Honey'},{emoji:'☕',name:'Coffee'},{emoji:'🍓',name:'Fruits'}],
+    lunch:    [{emoji:'🍛',name:'Sunday Special Biryani'},{emoji:'🥗',name:'Raita'},{emoji:'🍮',name:'Gulab Jamun'},{emoji:'🥤',name:'Juice'}],
+    snacks:   [{emoji:'🍔',name:'Mini Burger'},{emoji:'🥤',name:'Milkshake'},{emoji:'🍟',name:'Fries'}],
+    supper:   [{emoji:'🍞',name:'Chapati'},{emoji:'🍛',name:'Mixed Veg'},{emoji:'🥗',name:'Salad'},{emoji:'🍵',name:'Milk'}]
+  }
+};
+
+/* ─── CLUBS ─── */
+const clubs=[
+  {emoji:'💻',name:'Coding Club',color:'rgba(37,99,235,0.2)',colorB:'#3b82f6',tag:'Technology',desc:'Weekly coding challenges, hackathons, and competitive programming sessions. Build projects and prepare for placements.',meet:'Every Saturday, 3 PM',room:'CS Lab 3',members:'120+'},
+  {emoji:'🎨',name:'Design Studio',color:'rgba(236,72,153,0.2)',colorB:'#f472b6',tag:'Creative',desc:'UI/UX design, graphic design, and digital art. Participate in design competitions and build your portfolio.',meet:'Wednesday, 5 PM',room:'Media Lab',members:'60+'},
+  {emoji:'🤖',name:'Robotics Club',color:'rgba(124,58,237,0.2)',colorB:'#a78bfa',tag:'Engineering',desc:'Build and program robots. Compete in national-level robotics events and learn embedded systems.',meet:'Tuesday & Friday, 4 PM',room:'Robotics Lab',members:'85+'},
+  {emoji:'📸',name:'Photography Club',color:'rgba(245,158,11,0.2)',colorB:'#fbbf24',tag:'Arts',desc:'Capture campus life, learn DSLR techniques, photo editing, and exhibit your best shots.',meet:'Sunday, 6 PM',room:'Open Campus',members:'45+'},
+  {emoji:'♟️',name:'Chess Club',color:'rgba(16,185,129,0.2)',colorB:'#34d399',tag:'Strategy',desc:'Weekly chess tournaments, training sessions with coaches, and inter-college competitions.',meet:'Monday & Thursday, 5 PM',room:'Student Lounge',members:'40+'},
+  {emoji:'🎭',name:'Drama Club',color:'rgba(239,68,68,0.2)',colorB:'#f87171',tag:'Performing Arts',desc:'Stage plays, street theatre, and cultural fest performances. Express yourself on stage.',meet:'Friday, 6 PM',room:'Auditorium',members:'70+'},
+  {emoji:'🌍',name:'NSS Unit',color:'rgba(6,182,212,0.2)',colorB:'#22d3ee',tag:'Social Service',desc:'Community service, blood donation drives, tree planting, and outreach programs.',meet:'Every Sunday',room:'NSS Office',members:'200+'},
+  {emoji:'🎵',name:'Music Club',color:'rgba(168,85,247,0.2)',colorB:'#c084fc',tag:'Music',desc:'Jam sessions, band performances, vocal training, and annual music fest. All genres welcome.',meet:'Saturday, 5 PM',room:'Music Room',members:'90+'},
+];
+
+/* ════════════ STATE ════════════ */
+let loggedInUser = null;
+let selectedDay = null;
+
+/* ════════════ STARS ════════════ */
+(function(){
+  const c = document.getElementById('stars-bg');
+  for(let i=0;i<120;i++){
+    const s=document.createElement('div');
+    s.className='star';
+    const sz=Math.random()*2.5+0.5;
+    s.style.cssText=`
+      width:${sz}px;height:${sz}px;
+      left:${Math.random()*100}%;top:${Math.random()*100}%;
+      --d:${(Math.random()*4+2).toFixed(1)}s;
+      --delay:-${(Math.random()*4).toFixed(1)}s;
+    `;
+    c.appendChild(s);
+  }
+})();
+
+/* ════════════ TOGGLE PASSWORD ════════════ */
+function togglePw(){
+  const i=document.getElementById('l-pass'),b=document.getElementById('pw-eye-btn');
+  if(i.type==='password'){i.type='text';b.textContent='🙈';}
+  else{i.type='password';b.textContent='👁';}
+}
+
+/* ════════════ LOGIN ════════════ */
+function doLogin(){
+  const uname   = document.getElementById('l-user').value.trim().toLowerCase();
+  const pass    = document.getElementById('l-pass').value;
+  const errEl   = document.getElementById('lc-error');
+  const spinner = document.getElementById('lc-spinner');
+  const lbl     = document.getElementById('btn-label');
+  const arrow   = document.getElementById('btn-arrow');
+  const btn     = document.getElementById('login-btn');
+
+  errEl.classList.remove('show');
+  if(!uname||!pass){errEl.textContent='⚠️ Please enter username and password.';errEl.classList.add('show');return;}
+
+  lbl.style.display='none';arrow.style.display='none';spinner.style.display='block';btn.disabled=true;
+
+  setTimeout(()=>{
+    const u = USERS[uname];
+    lbl.style.display='';arrow.style.display='';spinner.style.display='none';btn.disabled=false;
+
+    if(!u||u.password!==pass){
+      errEl.textContent='❌ Invalid username or password.';
+      errEl.classList.add('show');
+      document.getElementById('l-pass').value='';
+      return;
+    }
+
+    loggedInUser={...u, username:uname};
+    document.getElementById('sc-welcome').textContent=`Welcome, ${u.name}!`;
+    document.getElementById('lc-success').classList.add('show');
+    setTimeout(()=>revealSite(),1300);
+  },1000);
+}
+
+/* ════════════ REVEAL SITE ════════════ */
+function revealSite(){
+  document.getElementById('login-screen').classList.add('slide-out');
+  document.getElementById('nav-username').textContent = loggedInUser.name;
+  const m=document.getElementById('main-site');
+  m.style.display='block';
+  setTimeout(()=>m.classList.add('visible'),50);
+  renderClubs();
+  renderAttendance();
+  renderMarks();
+}
+
+/* ════════════ LOGOUT ════════════ */
+function doLogout(){
+  if(!confirm('Log out of StudySync?'))return;
+  loggedInUser=null;
+  const m=document.getElementById('main-site');
+  m.classList.remove('visible');
+  setTimeout(()=>{m.style.display='none';},600);
+  const ls=document.getElementById('login-screen');
+  ls.classList.remove('slide-out');
+  document.getElementById('lc-success').classList.remove('show');
+  document.getElementById('l-user').value='';
+  document.getElementById('l-pass').value='';
+  document.getElementById('lc-error').classList.remove('show');
+}
+
+/* ════════════ ENTER KEY ════════════ */
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!document.getElementById('login-screen').classList.contains('slide-out'))doLogin();
+});
+
+/* ════════════ PDF ════════════ */
+function openPDF(f,t){
+  document.getElementById('pdf-frame').src=f;
+  document.getElementById('pdf-title').textContent=t;
+  document.getElementById('pdf-dl-btn').href=f;
+  document.getElementById('pdf-overlay').classList.add('open');
+}
+function closePDF(){document.getElementById('pdf-overlay').classList.remove('open');document.getElementById('pdf-frame').src='';}
+
+/* ════════════ CANTEEN ════════════ */
+function selectDay(day,btn){
+  selectedDay=day;
+  document.querySelectorAll('.tt-step-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('meal-step').classList.remove('hidden');
+  document.querySelectorAll('.tt-meal-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tt-placeholder').classList.remove('hidden');
+  document.getElementById('meal-content').classList.add('hidden');
+}
+function selectMeal(meal,btn){
+  if(!selectedDay)return;
+  document.querySelectorAll('.tt-meal-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const dishes=menu[selectedDay][meal];
+  const lbl={breakfast:'Breakfast',lunch:'Lunch',snacks:'Snacks',supper:'Supper'};
+  document.getElementById('meal-header-text').textContent=`${selectedDay} – ${lbl[meal]}`;
+  document.getElementById('dish-list').innerHTML=dishes.map(d=>`<div class="dish-item"><span class="dish-emoji">${d.emoji}</span>${d.name}</div>`).join('');
+  document.getElementById('tt-placeholder').classList.add('hidden');
+  document.getElementById('meal-content').classList.remove('hidden');
+}
+
+/* ════════════ CLUBS ════════════ */
+function renderClubs(){
+  document.getElementById('clubs-grid').innerHTML=clubs.map((c,i)=>`
+    <div class="card club-card" onclick="openClub(${i})">
+      <div class="club-logo" style="background:${c.color};">${c.emoji}</div>
+      <h3>${c.name}</h3>
+      <p>${c.desc.substring(0,68)}…</p>
+      <span class="club-tag" style="background:${c.color};color:${c.colorB};">${c.tag}</span>
+    </div>`).join('');
+}
+function openClub(i){
+  const c=clubs[i];
+  document.getElementById('modal-emoji').textContent=c.emoji;
+  document.getElementById('modal-title').textContent=c.name;
+  document.getElementById('modal-desc').textContent=c.desc;
+  document.getElementById('modal-info').innerHTML=`
+    <div class="modal-info-row">🗓️ <span>Meets:</span> ${c.meet}</div>
+    <div class="modal-info-row">📍 <span>Location:</span> ${c.room}</div>
+    <div class="modal-info-row">👥 <span>Members:</span> ${c.members}</div>
+    <div class="modal-info-row">🏷️ <span>Category:</span> ${c.tag}</div>`;
+  document.getElementById('club-modal').classList.add('open');
+}
+function closeModal(){document.getElementById('club-modal').classList.remove('open');}
+document.getElementById('club-modal').addEventListener('click',e=>{if(e.target.id==='club-modal')closeModal();});
+
+/* ════════════ ATTENDANCE RENDER ════════════ */
+function attendColor(p){
+  if(p>=85)return{bar:'#22c55e',text:'#22c55e',bg:'rgba(34,197,94,0.12)',label:'Good Standing'};
+  if(p>=75)return{bar:'#f59e0b',text:'#f59e0b',bg:'rgba(245,158,11,0.12)',label:'Borderline'};
+  return{bar:'#ef4444',text:'#ef4444',bg:'rgba(239,68,68,0.12)',label:'Low — Risk'};
+}
+
+function renderAttendance(){
+  const key = loggedInUser.username;
+  const data = ATTENDANCE_DATA[key] || ATTENDANCE_DATA['student'];
+  const ov = data.overall;
+
+  // summary
+  const c = attendColor(ov.percentage);
+  document.getElementById('attend-summary').innerHTML=`
+    <div><div class="attend-sum-num" style="color:${c.text};">${ov.percentage>0?ov.percentage.toFixed(1)+'%':'N/A'}</div><div class="attend-sum-label">Overall %</div></div>
+    <div><div class="attend-sum-num" style="color:var(--blue-light);">${ov.conducted}</div><div class="attend-sum-label">Classes Conducted</div></div>
+    <div><div class="attend-sum-num" style="color:var(--purple-light);">${ov.attended}</div><div class="attend-sum-label">Classes Attended</div></div>`;
+
+  if(data.subjects.length===0){
+    document.getElementById('attend-grid').innerHTML=`<div style="grid-column:1/-1;text-align:center;color:var(--gray);padding:32px;">Attendance data not available for this account.</div>`;
+    return;
+  }
+
+  document.getElementById('attend-grid').innerHTML=data.subjects.map(s=>{
+    const sc=attendColor(s.pct);
+    return`<div class="card attend-card">
+      <div class="attend-subject">${s.name}</div>
+      <div class="attend-detail" style="font-family:'Space Mono',monospace;">${s.code} &nbsp;·&nbsp; ${s.attended}/${s.conducted} classes</div>
+      <div class="attend-bar-wrap"><div class="attend-bar" style="width:${s.pct}%;background:${sc.bar};"></div></div>
+      <div class="attend-footer">
+        <span class="attend-pct" style="color:${sc.text};">${s.pct.toFixed(1)}%</span>
+        <span class="attend-badge" style="background:${sc.bg};color:${sc.text};">${sc.label}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ════════════ MARKS RENDER ════════════ */
+function gradeColor(g){
+  const m={O:'#22c55e','A+':'#3b82f6',A:'#a78bfa','B+':'#f59e0b',B:'#f97316',C:'#ef4444'};
+  return m[g]||'#94a3b8';
+}
+
+function renderMarks(){
+  const key = loggedInUser.username;
+  const data = MARKS_DATA[key] || MARKS_DATA['student'];
+  const cgpaPct = (data.cgpa/10)*100;
+
+  // summary with CGPA circle
+  document.getElementById('marks-summary').innerHTML=`
+    <div class="card marks-sum-card">
+      <div class="cgpa-circle" style="--pct:${cgpaPct};">
+        <div class="cgpa-inner">
+          <div class="cgpa-val">${data.cgpa>0?data.cgpa.toFixed(1):'—'}</div>
+          <div class="cgpa-label">CGPA</div>
+        </div>
+      </div>
+      <div style="font-size:0.8rem;color:var(--gray);">Current CGPA</div>
+    </div>
+    <div class="card marks-sum-card">
+      <div class="marks-sum-num" style="color:var(--green);">${data.subjects.length>0?Math.max(...data.subjects.map(s=>s.total)):'—'}</div>
+      <div class="marks-sum-label">Highest Score (50)</div>
+    </div>
+    <div class="card marks-sum-card">
+      <div class="marks-sum-num" style="color:var(--blue-light);">${data.subjects.length>0?(data.subjects.reduce((a,s)=>a+s.total,0)/data.subjects.length).toFixed(1):'—'}</div>
+      <div class="marks-sum-label">Average Score</div>
+    </div>`;
+
+  if(data.subjects.length===0){
+    document.getElementById('marks-tbody').innerHTML=`<tr><td colspan="6" style="text-align:center;color:var(--gray);padding:32px;">Marks data not available for this account.</td></tr>`;
+    return;
+  }
+
+  document.getElementById('marks-tbody').innerHTML=data.subjects.map(s=>{
+    const gc=gradeColor(s.grade);
+    const barW=Math.round((s.total/50)*100);
+    return`<tr>
+      <td>
+        <div style="font-weight:600;">${s.name}</div>
+        <div class="marks-sub-tag" style="font-family:'Space Mono',monospace;">${s.code}</div>
+        <div class="marks-bar-mini" style="width:${barW}%;background:linear-gradient(90deg,${gc}88,${gc});"></div>
+      </td>
+      <td style="font-weight:600;">${s.i1}<span style="color:var(--gray);font-size:0.78rem;">/20</span></td>
+      <td style="font-weight:600;">${s.i2}<span style="color:var(--gray);font-size:0.78rem;">/20</span></td>
+      <td style="font-weight:600;">${s.assign}<span style="color:var(--gray);font-size:0.78rem;">/10</span></td>
+      <td style="font-size:1.05rem;font-weight:800;color:${gc};">${s.total}</td>
+      <td><div class="marks-grade" style="background:${gc}22;color:${gc};">${s.grade}</div></td>
+    </tr>`;
+  }).join('');
+}
+
+/* ════════════ SCROLL + NAV ACTIVE ════════════ */
+function scrollSec(id){document.getElementById(id).scrollIntoView({behavior:'smooth'});}
+window.addEventListener('scroll',()=>{
+  const secs=['home','resources','timetable','clubs','attendance','marks','team','contact'];
+  let cur='home';
+  secs.forEach(id=>{const el=document.getElementById(id);if(el&&window.scrollY>=el.offsetTop-130)cur=id;});
+  document.querySelectorAll('.nav-links a').forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+cur));
+});
+
+/* ════════════ CONTACT ════════════ */
+function sendMsg(){
+  const n=document.getElementById('c-name').value;
+  const e=document.getElementById('c-email').value;
+  const m=document.getElementById('c-msg').value;
+  if(!n||!e||!m){alert('Please fill all fields.');return;}
+  document.getElementById('c-success').classList.remove('hidden');
+  document.getElementById('c-name').value='';document.getElementById('c-email').value='';document.getElementById('c-msg').value='';
+  setTimeout(()=>document.getElementById('c-success').classList.add('hidden'),4000);
+}
+
+/* ════════════ SCROLL FADE ════════════ */
+const observer=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('fade-in');});},{threshold:0.07});
+setTimeout(()=>document.querySelectorAll('.card').forEach(c=>observer.observe(c)),200);
+</script>
+</body>
+</html>
