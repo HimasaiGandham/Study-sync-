@@ -152,10 +152,9 @@ int main() {
             case 3: app.showMarks(); break;
             case 4: app.showWHATINMESS(); break; // FIXED
             case 5: app.showClubs(); break;
-            case 6: app.showTimetable(); break;
-            case 7: app.showUniversityAddress(); break; // NEW
-            case 8: app.showTeamInfo(); break; // NEW
-            case 9: cout << "Exiting...\n"; break;
+            case 6: app.showUniversityAddress(); break; // NEW
+            case 7: app.showTeamInfo(); break; // NEW
+            case 8: cout << "Exiting...\n"; break;
             default: cout << "Invalid choice!\n";
         }
 
